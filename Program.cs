@@ -1,23 +1,44 @@
-﻿using PrestamosBiblioteca.Aplicacion;
+﻿using Microsoft.Data.Sqlite;
+using PrestamosBiblioteca.Aplicacion;
 using PrestamosBiblioteca.Persistencia;
 
-namespace PrestamosBiblioteca;
+var cadenaConexion = "Data Source=biblioteca.db";
 
-internal static class Program
+using (var conexion = new SqliteConnection(cadenaConexion))
 {
-    private static void Main()
-    {
-        try
-        {
-            var inicializador = new InicializadorBaseDatos();
-            inicializador.Inicializar();
+    conexion.Open();
+    using var comando = conexion.CreateCommand();
+    comando.CommandText = @"
+        CREATE TABLE IF NOT EXISTS Lectores (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Codigo TEXT NOT NULL,
+            Nombre TEXT NOT NULL,
+            Correo TEXT NOT NULL,
+            Telefono TEXT NOT NULL
+        );
 
-            var repositorio = new RepositorioBiblioteca(inicializador.CadenaConexion);
-            new MenuBiblioteca(repositorio).Ejecutar();
-        }
-        catch (Exception error)
-        {
-            Console.WriteLine($"No se pudo iniciar el sistema: {error.Message}");
-        }
-    }
+        CREATE TABLE IF NOT EXISTS Libros (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            Codigo TEXT NOT NULL,
+            Titulo TEXT NOT NULL,
+            Autor TEXT NOT NULL,
+            Ejemplares INTEGER NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS Prestamos (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            LectorId INTEGER NOT NULL,
+            LibroId INTEGER NOT NULL,
+            FechaPrestamo TEXT NOT NULL,
+            FechaLimite TEXT NOT NULL,
+            FechaDevolucion TEXT,
+            FOREIGN KEY(LectorId) REFERENCES Lectores(Id) ON DELETE CASCADE,
+            FOREIGN KEY(LibroId) REFERENCES Libros(Id) ON DELETE CASCADE
+        );
+    ";
+    comando.ExecuteNonQuery();
 }
+
+var repositorio = new RepositorioBiblioteca(cadenaConexion);
+var menu = new MenuBiblioteca(repositorio);
+menu.Ejecutar();
