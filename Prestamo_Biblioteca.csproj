@@ -11,4 +11,8 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="crear_tablas.sql" />
+  </ItemGroup>
+
 </Project>
